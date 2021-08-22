@@ -17,7 +17,6 @@
     tools:context=".MainActivity">
 
     <LinearLayout
-        android:id="@+id/linearLayout"
         android:layout_width="344dp"
         android:layout_height="692dp"
         android:background="@drawable/circle_background"
@@ -53,7 +52,6 @@
                     android:layout_height="65dp" />
 
                 <TextView
-                    android:id="@+id/textView5"
                     android:layout_width="match_parent"
                     android:layout_height="130dp"
                     android:background="@drawable/circle_background"
