@@ -15,4 +15,6 @@ class Weather {
         var key = gson.fromJson(inputString, Key::class.java)
         this.key= key.key.toString()
     }
+
+
 }
