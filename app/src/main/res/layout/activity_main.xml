@@ -18,18 +18,19 @@
 
     <LinearLayout
         android:id="@+id/linearLayout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
-        android:orientation="vertical"
+        android:layout_width="344dp"
+        android:layout_height="692dp"
         android:background="@drawable/circle_background"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="264dp"
+            android:layout_height="277dp"
             android:background="@drawable/circle_background"
             android:baselineAligned="false"
             android:orientation="horizontal">
@@ -74,14 +75,20 @@
 
         <Space
             android:layout_width="match_parent"
-            android:layout_height="181dp"
+            android:layout_height="75dp"
             android:backgroundTint="#874242"
             android:foregroundTint="#00FFFFFF" />
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="388dp"
-            android:orientation="vertical" />
+            android:layout_width="334dp"
+            android:layout_height="316dp"
+            android:background="@drawable/circle_background"
+            android:orientation="vertical" >
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </LinearLayout>
 
     </LinearLayout>
 
