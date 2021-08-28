@@ -1,6 +1,7 @@
 package com.example.tinyweather
 
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import org.json.JSONArray
 import org.junit.Test
 
@@ -17,11 +18,11 @@ import java.net.URL
 class WeatherUnitTest {
     @Test
     fun readKey_isCorrect() {
-        var path: String = System.getProperty("user.dir")
-        path += "\\src\\main\\keys\\keys.json"
-
-        val value: Weather = Weather (path)
-
+//        val result = URL().readText()
+//
+//        var gson = Gson()
+//
+//        var key = gson.fromJson(result, WeatherJSON.WeatherInfo::class.java)
 
     }
 
@@ -36,7 +37,11 @@ class WeatherUnitTest {
         println(result)
 
         var gson = Gson()
-        var key: WeatherJSON.WeatherInfo = gson.fromJson(result, WeatherJSON.WeatherInfo::class.java)
-        print(key.clouds.all)
+
+        var key = gson.fromJson(result, WeatherJSON.WeatherInfo::class.java)
+
+        println(key.clouds.all)
+//        var key: WeatherJSON.WeatherInfo = gson.fromJson(result, WeatherJSON.WeatherInfo::class.java)
+//        print(key.clouds.all)
     }
 }
