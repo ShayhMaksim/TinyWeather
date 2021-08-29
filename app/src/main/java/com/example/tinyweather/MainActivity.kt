@@ -3,15 +3,19 @@ package com.example.tinyweather
 
 
 import android.Manifest
+import android.annotation.SuppressLint
 
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
 
 import android.location.LocationManager
+import android.os.AsyncTask
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -19,7 +23,9 @@ import android.provider.Contacts
 
 import android.provider.Settings
 import android.util.Log
+import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import androidx.appcompat.app.AlertDialog
@@ -33,34 +39,72 @@ import java.util.*
 
 
 class MainActivity() : AppCompatActivity() {
+    //Request
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    lateinit var locationRequest: LocationRequest
-    lateinit var location: Location
     private lateinit var locationCallback: LocationCallback
-    private lateinit var currentWeatherText: TextView
+    lateinit var locationRequest: LocationRequest
+
+    //Current location
+    lateinit var location: Location
+
+    //Weather
     private lateinit var key:String
     private lateinit var openweather: WeatherJSON.WeatherInfo
 
+    //UI
+    private lateinit var currentWeatherText: TextView
+    private lateinit var weatherImage: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        currentWeatherText = findViewById(R.id.TextView)
+        weatherImage = findViewById(R.id.imageView)
 
         key = resources.getString(R.string.weather_key);
 
-        checkLocation()
 
+        runBlocking {
+            launch(Dispatchers.IO) {
+                checkLocation()
+            }
+        }
+    }
+
+
+    fun runWeather() = runBlocking {
+        launch(Dispatchers.IO) {
+            getUrlWeather(location, key)
+            currentWeatherText.text = openweather.main.temp.toString()
+
+        }
     }
 
 
     private fun getUrlWeather(location: Location, key: String) = runBlocking  {
          val job = launch(Dispatchers.IO) {
             openweather  = openweatherData("https://api.openweathermap.org/data/2.5/weather?lat=${location.latitude}&lon=${location.longitude}&appid=${key}")
+
+             launch {
+                 var image: Bitmap? = null
+                 try {
+                     val `in` = URL("https://openweathermap.org/img/wn/${openweather.weather[0].icon}@2x.png").openStream()
+                     image = BitmapFactory.decodeStream(`in`)
+                     weatherImage.setImageBitmap(image)
+                 } catch (e: Exception) {
+                     Log.e("Error Message", e.message.toString())
+                     e.printStackTrace()
+                 }
+             }
+
         }
     }
 
-    suspend fun openweatherData(url: String):WeatherJSON.WeatherInfo {
+
+
+
+    private fun openweatherData(url: String):WeatherJSON.WeatherInfo {
         val result = URL(url).readText()
         var gson = Gson()
         return gson.fromJson(result, WeatherJSON.WeatherInfo::class.java)
@@ -107,13 +151,7 @@ class MainActivity() : AppCompatActivity() {
 
                     location = locationResult.locations[0]
 
-                    val url = "https://api.openweathermap.org/data/2.5/weather?lat=${location.latitude}&lon=${location.longitude}&appid=${key}"
-
-                    getUrlWeather(location,key)
-
-                    currentWeatherText = findViewById(R.id.TextView)
-
-                    currentWeatherText.setText(openweather.main.temp.toString())
+                    runWeather()
 
                     addresses = geoCoder.getFromLocation(
                         locationResult.lastLocation.latitude,
