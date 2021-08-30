@@ -34,11 +34,16 @@ import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.*
 import com.google.gson.Gson
 import kotlinx.coroutines.*
+import java.lang.StrictMath.round
 import java.net.URL
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.*
 
 
 class MainActivity() : AppCompatActivity() {
+    data class CalendarInfo(val day: String, val month: String)
+
     //Request
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
@@ -73,34 +78,38 @@ class MainActivity() : AppCompatActivity() {
     }
 
 
-    fun runWeather() = runBlocking {
+    fun runWeather(location: Location) = runBlocking {
         launch(Dispatchers.IO) {
             getUrlWeather(location, key)
-            currentWeatherText.text = openweather.main.temp.toString()
-
+            val Data: CalendarInfo = toDataString(openweather.dt)
+            currentWeatherText.text = "${Data.day} ${monthNamesRussia[Data.month.toInt()]}\nТемпература на улице ${round(openweather.main.temp-273)}"
         }
     }
 
 
-    private fun getUrlWeather(location: Location, key: String) = runBlocking  {
-         val job = launch(Dispatchers.IO) {
-            openweather  = openweatherData("https://api.openweathermap.org/data/2.5/weather?lat=${location.latitude}&lon=${location.longitude}&appid=${key}")
+    private fun toDataString(dateFormat: Long): CalendarInfo {
 
-             launch {
-                 var image: Bitmap? = null
-                 try {
-                     val `in` = URL("https://openweathermap.org/img/wn/${openweather.weather[0].icon}@2x.png").openStream()
-                     image = BitmapFactory.decodeStream(`in`)
-                     weatherImage.setImageBitmap(image)
-                 } catch (e: Exception) {
-                     Log.e("Error Message", e.message.toString())
-                     e.printStackTrace()
-                 }
-             }
-
-        }
+        val sdfDay = SimpleDateFormat("dd")
+        val sdfMonth = SimpleDateFormat("MM")
+        val date = Date(dateFormat * 1000)
+        return CalendarInfo(sdfDay.format(date),sdfMonth.format(date))
     }
 
+
+    private fun getUrlWeather(location: Location, key: String) {
+        openweather =
+            openweatherData("https://api.openweathermap.org/data/2.5/weather?lat=${location.latitude}&lon=${location.longitude}&appid=${key}")
+        var image: Bitmap? = null
+        try {
+            val `in` =
+                URL("https://openweathermap.org/img/wn/${openweather.weather[0].icon}@2x.png").openStream()
+            image = BitmapFactory.decodeStream(`in`)
+            weatherImage.setImageBitmap(image)
+        } catch (e: Exception) {
+            Log.e("Error Message", e.message.toString())
+            e.printStackTrace()
+        }
+    }
 
 
 
@@ -151,7 +160,7 @@ class MainActivity() : AppCompatActivity() {
 
                     location = locationResult.locations[0]
 
-                    runWeather()
+                    runWeather(location)
 
                     addresses = geoCoder.getFromLocation(
                         locationResult.lastLocation.latitude,

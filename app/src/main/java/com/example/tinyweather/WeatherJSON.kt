@@ -28,7 +28,7 @@ class WeatherJSON {
         val clouds: Clouds,
 
         @SerializedName("dt")
-        val dt: Int,
+        val dt: Long,
 
         @SerializedName("sys")
         val sys: Sys,
