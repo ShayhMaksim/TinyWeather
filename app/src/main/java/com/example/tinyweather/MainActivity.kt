@@ -3,7 +3,7 @@ package com.example.tinyweather
 
 
 import android.Manifest
-import android.annotation.SuppressLint
+
 
 import android.content.Context
 import android.content.Intent
@@ -15,19 +15,16 @@ import android.location.Geocoder
 import android.location.Location
 
 import android.location.LocationManager
-import android.os.AsyncTask
+
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.provider.Contacts
+
 
 import android.provider.Settings
 import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
-import androidx.annotation.UiThread
-import androidx.annotation.WorkerThread
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 
@@ -36,7 +33,6 @@ import com.google.gson.Gson
 import kotlinx.coroutines.*
 import java.lang.StrictMath.round
 import java.net.URL
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -69,6 +65,8 @@ class MainActivity() : AppCompatActivity() {
 
         key = resources.getString(R.string.weather_key);
 
+        runGeo(this)
+
 
         runBlocking {
             launch(Dispatchers.IO) {
@@ -77,6 +75,16 @@ class MainActivity() : AppCompatActivity() {
         }
     }
 
+    // ПОЛУЧИТЬ КООРДИНАТЫ ГОРОДА, А ЗАТЕМ ЭТИ КООРДИНАТЫ ОТПРАВИТЬ
+    fun runGeo(activity:AppCompatActivity) = runBlocking {
+        launch(Dispatchers.IO) {
+            val gcd = Geocoder(activity, Locale.getDefault())
+            val addresses = gcd.getFromLocationName("Ostrovtsy Moscow Region",1)
+
+//            val addresses = gcd.getFromLocation(60.0, 60.0, 1)
+            if (addresses.size > 0) println(addresses[0].locality)
+        }
+    }
 
     fun runWeather(location: Location) = runBlocking {
         launch(Dispatchers.IO) {
@@ -162,20 +170,20 @@ class MainActivity() : AppCompatActivity() {
 
                     runWeather(location)
 
-                    addresses = geoCoder.getFromLocation(
-                        locationResult.lastLocation.latitude,
-                        locationResult.lastLocation.longitude,
-                        1
-                    )
-                    if (addresses != null && addresses.isNotEmpty()) {
-                        val address: String = addresses[0].getAddressLine(0)
-                        val city: String = addresses[0].locality
-                        val state: String = addresses[0].adminArea
-                        val country: String = addresses[0].countryName
-                        val postalCode: String = addresses[0].postalCode
-                        val knownName: String = addresses[0].featureName
-                        Log.e("location", "$address $city $state $postalCode $country $knownName")
-                    }
+//                    addresses = geoCoder.getFromLocation(
+//                        locationResult.lastLocation.latitude,
+//                        locationResult.lastLocation.longitude,
+//                        1
+//                    )
+//                    if (addresses != null && addresses.isNotEmpty()) {
+//                        val address: String = addresses[0].getAddressLine(0)
+//                        val city: String = addresses[0].locality
+//                        val state: String = addresses[0].adminArea
+//                        val country: String = addresses[0].countryName
+//                        val postalCode: String = addresses[0].postalCode
+//                        val knownName: String = addresses[0].featureName
+//                        Log.e("location", "$address $city $state $postalCode $country $knownName")
+//                    }
                 }
             }
         }
