@@ -23,10 +23,15 @@ import android.os.Bundle
 
 import android.provider.Settings
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 import com.google.android.gms.location.*
 import com.google.gson.Gson
@@ -51,10 +56,15 @@ class MainActivity() : AppCompatActivity() {
     //Weather
     private lateinit var key:String
     private lateinit var openweather: WeatherJSON.WeatherInfo
+//    private lateinit var weekweather: WeatherJSON.WeekWeatherInfo
 
     //UI
     private lateinit var currentWeatherText: TextView
     private lateinit var weatherImage: ImageView
+
+
+    //ViewModel
+    private lateinit var recyclerView: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,8 +72,11 @@ class MainActivity() : AppCompatActivity() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         currentWeatherText = findViewById(R.id.TextView)
         weatherImage = findViewById(R.id.imageView)
-
         key = resources.getString(R.string.weather_key);
+
+        recyclerView = findViewById(R.id.weekWeather)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+
 
         runGeo(this)
 
@@ -71,8 +84,12 @@ class MainActivity() : AppCompatActivity() {
         runBlocking {
             launch(Dispatchers.IO) {
                 checkLocation()
+
             }
         }
+
+
+
     }
 
     // ПОЛУЧИТЬ КООРДИНАТЫ ГОРОДА, А ЗАТЕМ ЭТИ КООРДИНАТЫ ОТПРАВИТЬ
@@ -80,9 +97,6 @@ class MainActivity() : AppCompatActivity() {
         launch(Dispatchers.IO) {
             val gcd = Geocoder(activity, Locale.getDefault())
             val addresses = gcd.getFromLocationName("Ostrovtsy Moscow Region",1)
-
-//            val addresses = gcd.getFromLocation(60.0, 60.0, 1)
-            if (addresses.size > 0) println(addresses[0].locality)
         }
     }
 
@@ -91,12 +105,13 @@ class MainActivity() : AppCompatActivity() {
             getUrlWeather(location, key)
             val Data: CalendarInfo = toDataString(openweather.dt)
             currentWeatherText.text = "${Data.day} ${monthNamesRussia[Data.month.toInt()]}\nТемпература на улице ${round(openweather.main.temp-273)}"
+
+
         }
     }
 
 
     private fun toDataString(dateFormat: Long): CalendarInfo {
-
         val sdfDay = SimpleDateFormat("dd")
         val sdfMonth = SimpleDateFormat("MM")
         val date = Date(dateFormat * 1000)
@@ -107,6 +122,15 @@ class MainActivity() : AppCompatActivity() {
     private fun getUrlWeather(location: Location, key: String) {
         openweather =
             openweatherData("https://api.openweathermap.org/data/2.5/weather?lat=${location.latitude}&lon=${location.longitude}&appid=${key}")
+        var weekweather =
+            weakweatherData("https://api.openweathermap.org/data/2.5/onecall?lat=${location.latitude}&lon=${location.longitude}&exclude=minutely&appid=${key}")
+
+        val daily:List<WeatherJSON.Daily> = weekweather.daily
+
+        if (weekweather!=null) {
+            recyclerView.adapter = WeekRecyclerAdapter(daily)
+        }
+
         var image: Bitmap? = null
         try {
             val `in` =
@@ -117,6 +141,7 @@ class MainActivity() : AppCompatActivity() {
             Log.e("Error Message", e.message.toString())
             e.printStackTrace()
         }
+
     }
 
 
@@ -125,6 +150,12 @@ class MainActivity() : AppCompatActivity() {
         val result = URL(url).readText()
         var gson = Gson()
         return gson.fromJson(result, WeatherJSON.WeatherInfo::class.java)
+    }
+
+    private fun weakweatherData(url: String):WeatherJSON.WeekWeatherInfo {
+        val result = URL(url).readText()
+        var gson = Gson()
+        return gson.fromJson(result, WeatherJSON.WeekWeatherInfo::class.java)
     }
 
     private fun checkLocation(){
